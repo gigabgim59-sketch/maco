@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>配色生成 — 색면 조합 생성기</title>
+<meta name="description" content="배경 위 색면 조합 생성기. 일본 전통색 200가지로 배경과 색면을 고르고, 배경만 바꿔 시리즈를 만들고, 고화질 PNG로 저장하세요.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="配色生成 — 배경 위 색면 조합 생성기">
+<meta property="og:description" content="전통색 200 · 배경 후보 · 색면 1–5 · PNG 3600px">
+<meta property="og:url" content="https://gigabgim59-sketch.github.io/maco/">
+<meta property="og:image" content="https://gigabgim59-sketch.github.io/maco/haishoku-thumbnail.png?v=2">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://gigabgim59-sketch.github.io/maco/haishoku-thumbnail.png?v=2">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🟧</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#e6e6e1; --panel:#f3f3ef; --ink:#1d1d1f; --sub:#6c6b67; --line:#d0cfc8;
+  --chip:#ebebe6; --accent:#b0632a; --accent-ink:#ffffff; --shadow:rgba(20,20,30,.28);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#16171a; --panel:#202125; --ink:#ecebe7; --sub:#9c9a95; --line:#34353b;
+    --chip:#292a2f; --accent:#d9803f; --accent-ink:#1b1b22; --shadow:rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16171a; --panel:#202125; --ink:#ecebe7; --sub:#9c9a95; --line:#34353b;
+  --chip:#292a2f; --accent:#d9803f; --accent-ink:#1b1b22; --shadow:rgba(0,0,0,.6);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New","Hiragino Sans","Apple SD Gothic Neo","Noto Sans JP",system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-size:15px}
+button{font:inherit;color:inherit}
+.wrap{max-width:1320px;margin:0 auto;padding:clamp(14px,3vw,36px)}
+.top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-family:"Shippori Mincho",serif;font-weight:700;font-size:clamp(26px,4.4vw,40px);letter-spacing:.1em;margin:0;line-height:1.1}
+.sub{margin:0;color:var(--sub);font-size:13px}
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 410px;gap:28px;align-items:start}
+.stage{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.canvas-box{display:flex;justify-content:center}
+#cv{display:block;max-width:100%;max-height:calc(100vh - 170px);width:auto;height:auto;box-shadow:0 22px 50px -28px var(--shadow)}
+.namebar{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:14px}
+.nm{display:inline-flex;align-items:center;gap:7px;padding:5px 11px 5px 6px;border:1px solid var(--line);background:var(--panel);border-radius:999px;cursor:pointer;font-family:"Shippori Mincho",serif;font-size:14px}
+.nm i{width:16px;height:16px;border-radius:4px;border:1px solid rgba(0,0,0,.12);display:block}
+.nm small{font-family:"Zen Kaku Gothic New",sans-serif;font-size:11px;color:var(--sub)}
+.nm:hover{border-color:var(--ink)}
+
+.side{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.act{padding:11px 4px;border:1px solid var(--line);background:var(--bg);border-radius:9px;cursor:pointer;font-size:13px;white-space:nowrap}
+.act:hover:not(:disabled){border-color:var(--ink)}
+.act:disabled{opacity:.4;cursor:default}
+.act.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.act.dl{grid-column:1 / -1;background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700;font-size:14px;padding:13px}
+.act.dl[aria-busy="true"]{opacity:.6}
+
+.tabs{display:flex;gap:4px;margin:16px 0 14px;background:var(--bg);padding:4px;border-radius:10px}
+.tabs button{flex:1;padding:9px 2px;border:0;background:transparent;border-radius:7px;cursor:pointer;font-size:13.5px;color:var(--sub);white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+h3{font-size:13px;font-weight:500;color:var(--sub);margin:18px 0 9px}
+h3:first-child{margin-top:2px}
+
+.rows{display:flex;flex-direction:column;gap:8px}
+.row{display:grid;grid-template-columns:52px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.row.bgrow{border-style:dashed}
+.row .sw{width:52px;height:52px;border-radius:8px;border:1px solid rgba(0,0,0,.14);cursor:pointer;padding:0}
+.row.bgrow .sw{border-radius:50%}
+.row .meta{min-width:0;cursor:pointer;line-height:1.3}
+.row .lab{display:block;font-size:11px;color:var(--sub)}
+.row .meta b{font-family:"Shippori Mincho",serif;font-size:17px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .meta small{color:var(--sub);font-size:11px;white-space:nowrap}
+.ic{width:34px;height:34px;border:1px solid var(--line);background:var(--panel);border-radius:8px;cursor:pointer;font-size:15px;line-height:1;padding:0}
+.ic:hover:not(:disabled){border-color:var(--ink)}
+.ic:disabled{opacity:.3;cursor:default}
+.ghost{width:100%;padding:10px;margin-top:10px;border:1px dashed var(--line);background:transparent;border-radius:9px;cursor:pointer;font-size:13px}
+.ghost:hover{border-color:var(--ink)}
+.ghost.small{width:auto;padding:7px 12px;margin-top:8px;border-style:solid}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:7px 12px;border:1px solid var(--line);background:var(--chip);border-radius:999px;cursor:pointer;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.rng{display:flex;align-items:center;gap:10px}
+.rng input{flex:1;accent-color:var(--accent)}
+.rng span{font-size:12px;color:var(--sub);width:44px;text-align:right;font-variant-numeric:tabular-nums}
+
+.comp{position:relative;display:block;width:100%;border-radius:4px;overflow:hidden;border:1px solid rgba(0,0,0,.08)}
+.comp i{position:absolute;display:block}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin-top:12px}
+.cand{position:relative;display:flex;flex-direction:column;gap:5px;padding:0;border:0;background:none;cursor:pointer;text-align:center}
+.cand .t{font-family:"Shippori Mincho",serif;font-size:12.5px;line-height:1.2}
+.cand .t small{display:block;font-family:"Zen Kaku Gothic New",sans-serif;font-size:10px;color:var(--sub)}
+.cand.on .comp{outline:2.5px solid var(--ink);outline-offset:2px}
+.cand:hover .comp{outline:2px solid var(--sub);outline-offset:2px}
+.cand .del{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:12px;cursor:pointer}
+.empty{color:var(--sub);font-size:13px;line-height:1.7;padding:10px 2px;grid-column:1/-1}
+
+.sheet{position:fixed;inset:0;z-index:50}
+.sheet-bg{position:absolute;inset:0;background:rgba(10,10,14,.45)}
+.sheet-card{position:absolute;left:0;right:0;bottom:0;max-height:88vh;display:flex;flex-direction:column;gap:10px;background:var(--panel);border-radius:16px 16px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px))}
+@media(min-width:861px){.sheet-card{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:min(760px,92vw);border-radius:16px}}
+.sheet-card>*{flex:none}
+.picker-card{height:82vh}
+.sheet-head{display:flex;align-items:center;gap:8px}
+.cur{flex:1;display:flex;align-items:center;gap:12px;min-width:0;font-size:13px;color:var(--sub);line-height:1.35}
+.cur .mini{width:78px;flex:none;box-shadow:0 2px 8px -3px var(--shadow)}
+.cur b{font-family:"Shippori Mincho",serif;font-size:21px;color:var(--ink)}
+.cur em{font-style:normal;font-size:13px}
+.cur small{font-size:12px}
+.cur .dot{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.15);margin-right:6px;vertical-align:1px}
+.x{width:36px;height:36px;border:1px solid var(--line);background:var(--bg);border-radius:50%;cursor:pointer;flex:none}
+.done{padding:9px 18px;border:0;border-radius:999px;background:var(--ink);color:var(--bg);cursor:pointer;font-weight:700}
+.revert{padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:transparent;cursor:pointer;font-size:12px;color:var(--sub)}
+.near{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;align-items:center;padding:1px 0}
+.near::-webkit-scrollbar,.fams::-webkit-scrollbar{display:none}
+.nlabel{flex:none;font-size:11px;color:var(--sub);margin-right:2px}
+.nr{flex:none;display:flex;align-items:center;gap:6px;padding:4px 11px 4px 4px;border:1px solid var(--line);border-radius:999px;background:var(--bg);cursor:pointer;font-family:"Shippori Mincho",serif;font-size:13px}
+.nr i{width:22px;height:22px;border-radius:50%;border:1px solid rgba(0,0,0,.12);display:block}
+#q{width:100%;padding:10px 13px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
+.fams{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:1px 0}
+.fams .chip{flex:none;padding:6px 11px}
+.fams .chip i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.pscroll{flex:1 1 auto!important;min-height:0;overflow-y:auto;overscroll-behavior:contain;position:relative;margin:0 -2px;padding:0 2px 10px}
+.sec h4{position:sticky;top:0;z-index:1;margin:0;padding:10px 2px 7px;background:var(--panel);font-size:13px;font-weight:500;color:var(--sub);display:flex;align-items:center;gap:6px}
+.sec h4 i{width:9px;height:9px;border-radius:50%;display:block}
+.sec h4 span{font-size:11px;opacity:.7}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:6px}
+.sq{aspect-ratio:1;border-radius:9px;border:1px solid rgba(0,0,0,.12);padding:0;cursor:pointer}
+.sq.on,.nt.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4.5px var(--ink)}
+.named{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px}
+.nt{display:flex;align-items:center;gap:8px;padding:5px;border:1px solid var(--line);border-radius:10px;background:var(--bg);cursor:pointer;text-align:left;min-width:0}
+.nt i{width:32px;height:32px;border-radius:7px;border:1px solid rgba(0,0,0,.12);flex:none;display:block}
+.nt span{min-width:0}
+.nt b{font-family:"Shippori Mincho",serif;font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nt small{font-size:10px;color:var(--sub);white-space:nowrap}
+.custom{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--sub);border-top:1px solid var(--line);padding-top:10px}
+.custom input{width:44px;height:30px;border:0;padding:0;background:none;cursor:pointer}
+.imgcard img{display:block;max-width:100%;max-height:52vh;margin:0 auto;border-radius:4px;box-shadow:0 10px 30px -18px var(--shadow)}
+.savebtns{display:flex;flex-direction:column;gap:8px}
+.savebtns .act{padding:13px}
+.hint{margin:0;font-size:12px;color:var(--sub);line-height:1.6;text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13px;pointer-events:none;transition:.25s;z-index:60;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media(max-width:860px){
+  .main{grid-template-columns:1fr;gap:12px}
+  .stage{z-index:5;background:var(--bg);padding:6px 0 10px;top:env(safe-area-inset-top,0px)}
+  #cv{max-height:40vh}
+  .namebar{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;padding:0 2px 2px;scrollbar-width:none}
+  .nm{flex:none;font-size:13px}
+  .side{padding:12px}
+  .picker-card{height:82vh;height:82dvh}
+  #picker .sheet-bg{background:rgba(10,10,14,.15)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>配色生成</h1>
+    <p class="sub">배경 위 색면 조합 · 일본 전통색 <span id="ncount"></span>가지</p>
+  </header>
+  <div class="main">
+    <section class="stage">
+      <div class="canvas-box"><canvas id="cv" width="1200" height="700"></canvas></div>
+      <div class="namebar" id="namebar"></div>
+    </section>
+    <section class="side">
+      <div class="actions">
+        <button class="act primary" id="bRandBg">🎲 배경</button>
+        <button class="act" id="bRandBlk">🎲 색면</button>
+        <button class="act" id="bUndo" disabled>↶ 되돌리기</button>
+        <button class="act" id="bSwap">⇄ 순서</button>
+        <button class="act dl" id="bSave">⤓ PNG 저장</button>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="edit" aria-selected="true">색 편집</button>
+        <button role="tab" data-tab="cand" aria-selected="false">배경 후보</button>
+        <button role="tab" data-tab="fav" aria-selected="false">즐겨찾기</button>
+        <button role="tab" data-tab="opt" aria-selected="false">배치·출력</button>
+      </nav>
+      <div class="tabpane" id="t-edit">
+        <h3>색을 누르면 바꿀 수 있어요</h3>
+        <div class="rows" id="rows"></div>
+        <button class="ghost" id="bAdd">＋ 색면 추가</button>
+      </div>
+      <div class="tabpane" id="t-cand" hidden>
+        <div class="chips" id="cgroups"></div>
+        <div class="cgrid" id="clist"></div>
+      </div>
+      <div class="tabpane" id="t-fav" hidden>
+        <button class="ghost" id="bFav" style="margin-top:0">☆ 지금 조합 저장</button>
+        <div class="cgrid" id="flist"></div>
+      </div>
+      <div class="tabpane" id="t-opt" hidden>
+        <h3>색면 배치</h3>
+        <div class="chips" id="dirs"></div>
+        <h3>여백</h3>
+        <div class="rng"><input type="range" id="margin" min="0" max="40" step="0.01"><span id="marginV"></span></div>
+        <h3>색면 사이 간격</h3>
+        <div class="rng"><input type="range" id="gap" min="0" max="15" step="0.5"><span id="gapV"></span></div>
+        <h3>색면 질감</h3>
+        <div class="rng"><input type="range" id="tex" min="0" max="100"><span id="texV"></span></div>
+        <button class="ghost small" id="bSeed">질감 패턴 바꾸기</button>
+        <h3>배경 질감</h3>
+        <div class="chips" id="bgtex"></div>
+        <h3>구성 비율</h3>
+        <div class="chips" id="ratios"></div>
+        <h3>배경 늘리기 · 색면은 그대로, 배경만 세로로 길게</h3>
+        <div class="chips" id="exts"></div>
+        <h3>저장 해상도 (긴 변)</h3>
+        <div class="chips" id="reses"></div>
+        <button class="ghost small" id="bReset">레퍼런스 설정으로 되돌리기</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="sheet" id="picker" hidden>
+  <div class="sheet-bg"></div>
+  <div class="sheet-card picker-card" role="dialog" aria-label="색 선택">
+    <div class="sheet-head">
+      <div class="cur" id="pcur"></div>
+      <button class="revert" id="prevert" hidden>원래대로</button>
+      <button class="done" id="pdone">완료</button>
+    </div>
+    <div class="near" id="near"></div>
+    <input id="q" type="search" placeholder="이름·읽기·HEX 검색 (예: 藍, あお, 2792)" autocomplete="off">
+    <div class="fams" id="fams"></div>
+    <div class="pscroll" id="pscroll"></div>
+    <label class="custom">목록에 없는 색 직접 지정 <input type="color" id="custom" value="#b0632a"></label>
+  </div>
+</div>
+
+<div class="sheet" id="imgview" hidden>
+  <div class="sheet-bg" data-close></div>
+  <div class="sheet-card imgcard" role="dialog" aria-label="이미지 저장">
+    <div class="sheet-head"><div class="cur"><b>이미지 저장</b></div><button class="x" data-close aria-label="닫기">✕</button></div>
+    <img id="outimg" alt="생성된 색면 이미지">
+    <div class="savebtns">
+      <button class="act dl" id="bShare">사진에 저장 · 공유</button>
+      <button class="act" id="bFile">파일로 다운로드</button>
+    </div>
+    <p class="hint">이미지를 길게 눌러 ‘사진 앱에 저장’을 선택해도 돼요.</p>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const RAW = `
+sakura 桜色 さくらいろ fef4f4 r
+usuzakura 薄桜 うすざくら fdeff2 r
+sakuranezu 桜鼠 さくらねず e9dfe5 r
+tokinezu 鴇鼠 ときねず e4d2d8 r
+niji 虹色 にじいろ f6bfbc r
+sango 珊瑚色 さんごいろ f5b1aa r
+ikkonzome 一斤染 いっこんぞめ f5b199 r
+shishi 宍色 ししいろ efab93 r
+kobai 紅梅色 こうばいいろ f2a0a1 r
+usubeni 薄紅 うすべに f0908d r
+jinzamomi 甚三紅 じんざもみ ee827c r
+momo 桃色 ももいろ f09199 r
+toki 鴇色 ときいろ f4b3c2 r
+nadeshiko 撫子色 なでしこいろ eebbcb r
+haizakura 灰桜 はいざくら e8d3d1 r
+sekichiku 石竹色 せきちくいろ e5abbe r
+usukobai 薄紅梅 うすこうばい e597b2 r
+taikou 退紅 たいこう d69090 r
+choshun 長春色 ちょうしゅんいろ c97586 r
+umenezu 梅鼠 うめねず c099a0 r
+nakabeni 中紅 なかべに c85179 r
+imayou 今様色 いまよういろ d0576b r
+bara 薔薇色 ばらいろ e9546b r
+karakurenai 韓紅 からくれない e95464 r
+botan 牡丹色 ぼたんいろ e7609e r
+tsutsuji 躑躅色 つつじいろ e95295 r
+akamurasaki 赤紫 あかむらさき eb6ea5 r
+beni 紅色 べにいろ d7003a r
+aka 赤 あか e60033 r
+shojohi 猩々緋 しょうじょうひ e2041b r
+benihi 紅緋 べにひ e83929 r
+hiiro 緋色 ひいろ d3381c r
+beniaka 紅赤 べにあか d9333f r
+akabeni 赤紅 あかべに c53d43 r
+akane 茜色 あかねいろ b7282e r
+shinku 真紅 しんく a22041 r
+ichigo 苺色 いちごいろ b5495b r
+enji 臙脂 えんじ b94047 r
+suo 蘇芳 すおう 9e3d3f r
+azuki 小豆色 あずきいろ 96514d r
+ebicha 海老茶 えびちゃ 773c30 r
+budocha 葡萄茶 えびちゃ 6c2c2f r
+shinonome 東雲色 しののめいろ f19072 o
+sangoshu 珊瑚朱色 さんごしゅいろ ee836f o
+ninjin 人参色 にんじんいろ ec6d51 o
+oni 黄丹 おうに ee7948 o
+kaki 柿色 かきいろ ed6d3d o
+shu 朱色 しゅいろ eb6101 o
+daidai 橙色 だいだいいろ ee7800 o
+mikan 蜜柑色 みかんいろ f08300 o
+anzu 杏色 あんずいろ f7b977 o
+hada 肌色 はだいろ fce2c4 o
+kou 香色 こういろ efcd9a o
+kyara 伽羅色 きゃらいろ d8a373 o
+komugi 小麦色 こむぎいろ e49e61 o
+kaba 樺色 かばいろ cd5e3c o
+taisha 代赭 たいしゃ bb5535 o
+renga 煉瓦色 れんがいろ b55233 o
+benikaba 紅樺色 べにかばいろ bb5548 o
+kakishibu 柿渋色 かきしぶいろ 9f563a o
+bengara 弁柄色 べんがらいろ 8f2e14 o
+kuriume 栗梅 くりうめ 852e19 o
+shakudo 赤銅色 しゃくどういろ 752100 o
+tobi 鳶色 とびいろ 95483f o
+kohaku 琥珀色 こはくいろ bf783a o
+kitsune 狐色 きつねいろ c38743 o
+rakuda 駱駝色 らくだいろ bf794e o
+kincha 金茶 きんちゃ c47222 o
+tsuchi 土色 つちいろ bc763c o
+kurumi 胡桃色 くるみいろ a86f4c o
+chojicha 丁子茶 ちょうじちゃ 8f583c o
+sencha 煎茶色 せんちゃいろ 8c6450 o
+cha 茶色 ちゃいろ 965042 o
+kuri 栗色 くりいろ 762f07 o
+kogecha 焦茶 こげちゃ 6f4b3e o
+susutake 煤竹色 すすたけいろ 6f514c o
+kuchiba 朽葉色 くちばいろ 917347 o
+kitsurubami 黄橡 きつるばみ b68d4c o
+yamabuki 山吹色 やまぶきいろ f8b500 y
+himawari 向日葵色 ひまわりいろ fcc800 y
+ukon 鬱金色 うこんいろ fabf14 y
+tamago 卵色 たまごいろ fcd575 y
+kiiro 黄色 きいろ ffd900 y
+chuki 中黄 ちゅうき ffea00 y
+nanohana 菜の花色 なのはないろ ffec47 y
+kihada 黄檗色 きはだいろ fef263 y
+kariyasu 刈安色 かりやすいろ f5e56b y
+sowa 承和色 そがいろ f8e58c y
+karekusa 枯草色 かれくさいろ e4dc8a y
+hiwa 鶸色 ひわいろ d7cf3a y
+karashi 芥子色 からしいろ d0af4c y
+kogane 黄金色 こがねいろ e6b422 y
+yamabukicha 山吹茶 やまぶきちゃ c89932 y
+odo 黄土色 おうどいろ c39143 y
+suna 砂色 すないろ dcd3b2 y
+ama 亜麻色 あまいろ d6c6af y
+kinari 生成り色 きなりいろ fbfaf5 y
+zouge 象牙色 ぞうげいろ f8f4e6 y
+wakakusa 若草色 わかくさいろ c3d825 g
+moegi2 萌黄 もえぎ aacf53 g
+wakaba 若葉色 わかばいろ b9d08b g
+yanagi 柳色 やなぎいろ a8c97f g
+urahayanagi 裏葉柳 うらはやなぎ c1d8ac g
+byakuroku 白緑 びゃくろく d6e9ca g
+matcha 抹茶色 まっちゃいろ c5c56a g
+uguisu 鶯色 うぐいすいろ 928c36 g
+uguisucha 鶯茶 うぐいすちゃ 715c1f g
+koke 苔色 こけいろ 69821b g
+matsuba 松葉色 まつばいろ 839b5c g
+oitake 老竹色 おいたけいろ 769164 g
+fukagawanezu 深川鼠 ふかがわねずみ 97a791 g
+sabiseiji 錆青磁 さびせいじ a6c8b2 g
+seiji 青磁色 せいじいろ 7ebeab g
+aotake 青竹色 あおたけいろ 7ebea5 g
+wakatake 若竹色 わかたけいろ 68be8d g
+midori 緑 みどり 3eb370 g
+rokusho 緑青色 ろくしょういろ 47885e g
+tokusa 木賊色 とくさいろ 3b7960 g
+chitose 千歳緑 ちとせみどり 316745 g
+tokiwa 常磐色 ときわいろ 007b43 g
+moegi 萌葱色 もえぎいろ 006e54 g
+fukamidori 深緑 ふかみどり 00552e g
+tetsu 鉄色 てついろ 005243 g
+aomidori 青緑 あおみどり 00a497 g
+getsuhaku 月白 げっぱく eaf4fc b
+shiroai 白藍 しらあい c1e4e9 b
+mizu 水色 みずいろ bce2e8 b
+kamenozoki 瓶覗 かめのぞき a2d7dd b
+hisoku 秘色色 ひそくいろ abced8 b
+sora 空色 そらいろ a0d8ef b
+wasurenagusa 勿忘草色 わすれなぐさいろ 89c3eb b
+byakugun 白群 びゃくぐん 83ccd2 b
+mizuasagi 水浅葱 みずあさぎ 80aba9 b
+sabiasagi 錆浅葱 さびあさぎ 5c9291 b
+shinbashi 新橋色 しんばしいろ 59b9c6 b
+asagi 浅葱色 あさぎいろ 00a3af b
+nandoiro 納戸色 なんどいろ 008899 b
+tsuyukusa 露草色 つゆくさいろ 38a1db b
+amairo 天色 あまいろ 2ca9e1 b
+ao 青 あお 0095d9 b
+hanada 縹色 はなだいろ 2792c3 b
+konpeki 紺碧 こんぺき 007bbb b
+usuhana 薄花色 うすはないろ 698aab b
+masuhana 舛花色 ますはないろ 5b7e91 b
+ainezu 藍鼠 あいねず 6c848d b
+ai 藍色 あいいろ 165e83 b
+gunjo 群青色 ぐんじょういろ 4c6cb3 b
+ruri 瑠璃色 るりいろ 1e50a2 b
+rurikon 瑠璃紺 るりこん 19448e b
+konjo 紺青 こんじょう 192f60 b
+koiai 濃藍 こいあい 0f2350 b
+kon 紺色 こんいろ 223a70 b
+kachi 勝色 かちいろ 181b39 b
+tetsukon 鉄紺 てつこん 17184b b
+konkikyo 紺桔梗 こんききょう 202f55 b
+fuji 藤色 ふじいろ bbbcde p
+fujinezu 藤鼠 ふじねず a6a5c4 p
+fujimurasaki 藤紫 ふじむらさき a59aca p
+benifuji 紅藤色 べにふじいろ cca6bf p
+awabenifuji 淡紅藤 あわべにふじ e6cde3 p
+hatoba 鳩羽色 はとばいろ 95859c p
+hatobanezu 鳩羽鼠 はとばねずみ 9e8b8e p
+shion 紫苑色 しおんいろ 867ba9 p
+fujinando 藤納戸 ふじなんど 706caa p
+sumire 菫色 すみれいろ 7058a3 p
+kikyo 桔梗色 ききょういろ 5654a2 p
+benikakehana 紅掛花色 べにかけはないろ 4d5aaf p
+konai 紺藍 こんあい 4a488e p
+ayame 菖蒲色 あやめいろ 674598 p
+edomurasaki 江戸紫 えどむらさき 745399 p
+murasaki 紫 むらさき 884898 p
+kodaimurasaki 古代紫 こだいむらさき 895b8a p
+nasukon 茄子紺 なすこん 824880 p
+wakamurasaki 若紫 わかむらさき bc64a4 p
+umemurasaki 梅紫 うめむらさき aa4c8f p
+benimurasaki 紅紫 べにむらさき cc7eb1 p
+budo 葡萄色 えびいろ 522f60 p
+komurasaki 深紫 こきむらさき 493759 p
+shikon 紫紺 しこん 460e44 p
+shiro 白 しろ ffffff n
+gofun 胡粉色 ごふんいろ fffffb n
+hakuji 白磁 はくじ f8fbf8 n
+shironeri 白練 しろねり f3f3f2 n
+kaihaku 灰白色 かいはくしょく e9e4d4 n
+gin 銀鼠 ぎんねず afafb0 n
+usuzumi 薄墨色 うすずみいろ a3a3a2 n
+chanezu 茶鼠 ちゃねずみ a99e93 n
+nezumi 鼠色 ねずみいろ 949495 n
+rikyu 利休鼠 りきゅうねずみ 888e7e n
+namari 鉛色 なまりいろ 7b7c7d n
+hai 灰色 はいいろ 7d7d7d n
+nibi 鈍色 にびいろ 727171 n
+sumi 墨 すみ 595857 n
+kurotsurubami 黒橡 くろつるばみ 544a47 n
+keshizumi 消炭色 けしずみいろ 524748 n
+aisumicha 藍墨茶 あいすみちゃ 474a4d n
+binroji 檳榔子染 びんろうじぞめ 433d3c n
+kuro 黒 くろ 2b2b2b n
+tetsuguro 鉄黒 てつぐろ 281a14 n
+shikkoku 漆黒 しっこく 0d0015 n
+`;
+const COL = {}, LIST = [];
+RAW.trim().split('\n').forEach(line => { const [id, n, r, h, f] = line.trim().split(/\s+/); const c = { id, n, r, h: '#' + h, f }; COL[id] = c; LIST.push(c); });
+const FAMSEC = [['r','赤·桃','#e95464'],['o','橙·茶','#ee7800'],['y','黄','#f8b500'],['g','緑','#3eb370'],['b','青','#2792c3'],['p','紫','#884898'],['n','白·灰·黒','#949495']];
+const hex2rgb = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+const lum = h => { const [r,g,b] = hex2rgb(h); return .2126*r + .7152*g + .0722*b; };
+const SORTED = LIST.slice().sort((a,b) => 'roygbpn'.indexOf(a.f) - 'roygbpn'.indexOf(b.f) || lum(b.h) - lum(a.h));
+function cdist(a, b) { const A = hex2rgb(a), B = hex2rgb(b), rm = (A[0]+B[0])/2, dr = A[0]-B[0], dg = A[1]-B[1], db = A[2]-B[2]; return Math.sqrt((2+rm/256)*dr*dr + 4*dg*dg + (2+(255-rm)/256)*db*db); }
+const nearCache = {};
+function nearestTrad(h) { if (nearCache[h]) return nearCache[h]; let b = null, bd = 1e9; for (const c of LIST) { const d = cdist(c.h, h); if (d < bd) { bd = d; b = c; } } return nearCache[h] = b; }
+function col(c) {
+  if (c && c[0] === '#') return { id: c, n: c.toUpperCase(), r: '≈ ' + nearestTrad(c).n, h: c, f: 'x' };
+  return COL[c] || COL.shiro;
+}
+
+/* reference series (from the uploaded images) */
+const REF_BLOCKS = ['#b0632a', '#1b1b22'];
+const REF_BG = ['#0b1024','#c85c3c','#f0d68c','#a8d8ea','#f19483','#1f2a4c','#5da9a8','#243b55','#e8c547','#b7d07a','#fadadd'];
+const REF_LAYOUT = { dir: 'row', margin: 21.43, gap: 0, tex: 50, bgTex: false, ratio: '12:7', ext: 'none' };
+
+const S = Object.assign({ bg: REF_BG[0], blocks: REF_BLOCKS.slice(), res: 2400, seed: 20260928 }, REF_LAYOUT);
+const RATIOS = [['12:7','12:7 기본',12,7],['16:9','16:9',16,9],['3:2','3:2',3,2],['1:1','1:1',1,1],['4:5','4:5',4,5],['9:16','9:16',9,16]];
+const EXTS = [['none','안 늘림'],['4:5','4:5'],['3:4','3:4'],['9:16','9:16'],['9:19.5','폰 배경 9:19.5']];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+let favs = store.get('haishoku.favs.v1', []);
+let recent = store.get('haishoku.recent.v1', []);
+const hist = [];
+const $ = s => document.querySelector(s);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const clone = o => JSON.parse(JSON.stringify(o));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+const KEYS = ['bg','blocks','dir','margin','gap','tex','bgTex','ratio','ext'];
+function snap() { const o = {}; KEYS.forEach(k => o[k] = S[k]); return JSON.stringify(o); }
+function push() { hist.push(snap()); if (hist.length > 100) hist.shift(); $('#bUndo').disabled = false; }
+function undo() { if (!hist.length) return; Object.assign(S, JSON.parse(hist.pop())); $('#bUndo').disabled = !hist.length; refreshAll(); }
+
+/* ---------- geometry ---------- */
+function dimsFor(ratio, long) { const [a, b] = String(ratio).split(':').map(Number); return a >= b ? [long, Math.round(long*b/a)] : [Math.round(long*a/b), long]; }
+const outDims = (st, long) => dimsFor(st.ext && st.ext !== 'none' ? st.ext : st.ratio, long);
+/* the colour-field composition keeps its own ratio; extra canvas is filled with background */
+function layoutFor(st, long) {
+  const [W, H] = outDims(st, long), [ra, rb] = String(st.ratio).split(':').map(Number);
+  const k = Math.min(W / ra, H / rb), CW = Math.round(ra * k), CH = Math.round(rb * k);
+  const ox = Math.round((W - CW) / 2), oy = Math.round((H - CH) / 2);
+  return { W, H, rects: rectsFor(st, CW, CH).map(r => ({ x0: r.x0 + ox, x1: r.x1 + ox, y0: r.y0 + oy, y1: r.y1 + oy })) };
+}
+function rectsFor(st, W, H) {
+  const s = Math.min(W, H), m = Math.round(st.margin / 100 * s), g = st.gap / 100 * s, n = st.blocks.length;
+  const x0 = m, y0 = m, w = W - 2*m, h = H - 2*m, out = [];
+  if (st.dir === 'col') {
+    const bh = (h - (n-1)*g) / n;
+    for (let i = 0; i < n; i++) out.push({ x0, x1: x0 + w, y0: Math.round(y0 + i*(bh+g)), y1: Math.round(y0 + i*(bh+g) + bh) });
+  } else {
+    const bw = (w - (n-1)*g) / n;
+    for (let i = 0; i < n; i++) out.push({ x0: Math.round(x0 + i*(bw+g)), x1: Math.round(x0 + i*(bw+g) + bw), y0, y1: y0 + h });
+  }
+  return out;
+}
+function compHTML(st, cls) {
+  const { W, H, rects } = layoutFor(st, 1000);
+  return '<span class="comp ' + (cls || '') + '" style="aspect-ratio:' + W + '/' + H + ';background:' + col(st.bg).h + '">' +
+    rects.map((r, i) => '<i style="left:' + (r.x0/W*100).toFixed(2) + '%;top:' + (r.y0/H*100).toFixed(2) + '%;width:' + ((r.x1-r.x0)/W*100).toFixed(2) + '%;height:' + ((r.y1-r.y0)/H*100).toFixed(2) + '%;background:' + col(st.blocks[i]).h + '"></i>').join('') + '</span>';
+}
+
+/* ---------- rendering ---------- */
+function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function vnoise(w, h, cells, rnd) {
+  const L = Math.max(w, h);
+  const gw = Math.max(1, Math.ceil(cells * w / L)) + 2, gh = Math.max(1, Math.ceil(cells * h / L)) + 2;
+  const G = new Float32Array(gw * gh);
+  for (let i = 0; i < G.length; i++) G[i] = rnd() - .5;
+  const out = new Float32Array(w * h), fx = (gw - 2) / w, fy = (gh - 2) / h;
+  for (let y = 0; y < h; y++) {
+    const gyv = y * fy, y0 = gyv | 0; let ty = gyv - y0; ty = ty * ty * (3 - 2 * ty);
+    const r0 = y0 * gw, r1 = r0 + gw;
+    for (let x = 0; x < w; x++) {
+      const gxv = x * fx, x0 = gxv | 0; let tx = gxv - x0; tx = tx * tx * (3 - 2 * tx);
+      const a = G[r0 + x0], b = G[r0 + x0 + 1], c = G[r1 + x0], d = G[r1 + x0 + 1];
+      const top = a + (b - a) * tx, bot = c + (d - c) * tx;
+      out[y * w + x] = top + (bot - top) * ty;
+    }
+  }
+  return out;
+}
+const texCache = new Map();
+function getTex(w, h, seed) {
+  const key = w + 'x' + h + ':' + seed;
+  if (texCache.has(key)) return texCache.get(key);
+  const rnd = mulberry(seed), T = new Float32Array(w * h);
+  const layers = [[14, 6], [45, 6], [2400, 52]];   // faint mottling + per-pixel paper grain
+  for (const [cells, amp] of layers) { const N = vnoise(w, h, cells, rnd); for (let i = 0; i < T.length; i++) T[i] += N[i] * amp; }
+  if (texCache.size > 2) texCache.clear();
+  texCache.set(key, T); return T;
+}
+function paint(canvas, long) {
+  const { W, H, rects } = layoutFor(S, long);
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(W, H), d = img.data;
+  const T = getTex(W, H, S.seed), amt = S.tex / 50;
+  const bg = hex2rgb(col(S.bg).h), bk = S.bgTex ? amt * .45 : 0;
+  for (let i = 0, j = 0; i < W * H; i++, j += 4) { const n = T[i] * bk; d[j] = bg[0] + n; d[j+1] = bg[1] + n; d[j+2] = bg[2] + n; d[j+3] = 255; }
+  rects.forEach((r, bi) => {
+    const hx = col(S.blocks[bi]).h, c = hex2rgb(hx), k = amt * (.5 + .6 * lum(hx) / 255);
+    for (let y = r.y0; y < r.y1; y++) for (let x = r.x0; x < r.x1; x++) {
+      const i = y * W + x, j = i * 4, n = T[i] * k;
+      d[j] = c[0] + n; d[j+1] = c[1] + n; d[j+2] = c[2] + n;
+    }
+  });
+  ctx.putImageData(img, 0, 0);
+}
+const PREVIEW_LONG = window.innerWidth < 860 ? 900 : 1200;
+let raf = 0;
+function draw() { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; paint($('#cv'), PREVIEW_LONG); renderNamebar(); }); }
+
+/* ---------- colour rows ---------- */
+const targets = () => [['bg', '배경', S.bg]].concat(S.blocks.map((c, i) => [i, '색면 ' + (i + 1), c]));
+const getT = t => t === 'bg' ? S.bg : S.blocks[t];
+function setT(t, id) { if (t === 'bg') S.bg = id; else S.blocks[t] = id; }
+const parseT = v => v === 'bg' ? 'bg' : +v;
+function renderNamebar() {
+  $('#namebar').innerHTML = targets().map(([t, l, c]) => { const k = col(c); return '<button class="nm" data-t="' + t + '"><i style="background:' + k.h + (t === 'bg' ? ';border-radius:50%' : '') + '"></i>' + esc(k.n) + '<small>' + l + '</small></button>'; }).join('');
+}
+function renderRows() {
+  $('#rows').innerHTML = targets().map(([t, l, c]) => {
+    const k = col(c);
+    return '<div class="row' + (t === 'bg' ? ' bgrow' : '') + '" data-t="' + t + '">' +
+      '<button class="sw" data-act="pick" style="background:' + k.h + '" aria-label="' + l + ' 색 바꾸기"></button>' +
+      '<div class="meta" data-act="pick"><span class="lab">' + l + '</span><b>' + esc(k.n) + '</b><small>' + esc(k.r) + ' · ' + k.h.toUpperCase() + '</small></div>' +
+      '<button class="ic" data-act="dice" title="같은 계열에서 랜덤">⚄</button>' +
+      (t === 'bg' ? '<span></span>' : '<button class="ic" data-act="del" title="삭제"' + (S.blocks.length <= 1 ? ' disabled' : '') + '>✕</button>') + '</div>';
+  }).join('');
+  $('#bAdd').disabled = S.blocks.length >= 5;
+}
+$('#rows').addEventListener('click', e => {
+  const row = e.target.closest('.row'); if (!row) return;
+  const t = parseT(row.dataset.t), el = e.target.closest('[data-act]'), act = el && el.dataset.act;
+  if (act === 'pick') openPicker(t);
+  else if (act === 'dice') { push(); const cur = col(getT(t)); const pool = LIST.filter(c => (cur.f === 'x' || c.f === cur.f) && c.id !== cur.id); setT(t, pick(pool.length ? pool : LIST).id); renderRows(); draw(); }
+  else if (act === 'del' && S.blocks.length > 1) { push(); S.blocks.splice(t, 1); renderRows(); draw(); }
+});
+$('#namebar').addEventListener('click', e => { const b = e.target.closest('.nm'); if (b) openPicker(parseT(b.dataset.t)); });
+$('#bAdd').onclick = () => { if (S.blocks.length >= 5) return; push(); S.blocks.push(pick(LIST).id); renderRows(); draw(); };
+$('#bSwap').onclick = () => { push(); S.blocks.reverse(); renderRows(); draw(); };
+$('#bUndo').onclick = undo;
+
+/* ---------- random ---------- */
+function farFromBlocks(c) { return S.blocks.every(b => cdist(c.h, col(b).h) > 90); }
+function randBg() { push(); const pool = LIST.filter(c => farFromBlocks(c) && c.id !== S.bg); S.bg = pick(pool.length ? pool : LIST).id; refreshAll(); }
+function randBlocks() {
+  push(); const n = S.blocks.length;
+  const mids = LIST.filter(c => { const l = lum(c.h); return l > 70 && l < 175 && 'roygbp'.includes(c.f); });
+  const darks = LIST.filter(c => lum(c.h) < 60);
+  const out = [];
+  if (Math.random() < .6) for (let i = 0; i < n; i++) out.push(pick(i % 2 ? darks : mids).id);
+  else for (let i = 0; i < n; i++) out.push(pick(LIST).id);
+  S.blocks = out; refreshAll();
+}
+$('#bRandBg').onclick = randBg;
+$('#bRandBlk').onclick = randBlocks;
+
+/* ---------- background candidates ---------- */
+let cgroup = 'ref', cands = [];
+function rollCands() {
+  cands = [];
+  'roygbpn'.split('').forEach(f => {
+    const pool = LIST.filter(c => c.f === f && farFromBlocks(c));
+    for (let i = 0; i < 2 && pool.length; i++) cands.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0].id);
+  });
+}
+function renderCands() {
+  $('#cgroups').innerHTML = [['ref', '레퍼런스 ' + REF_BG.length], ['trad', '전통색 추천']].map(([k, l]) => '<button class="chip" data-g="' + k + '" aria-pressed="' + (cgroup === k) + '">' + l + '</button>').join('') +
+    (cgroup === 'trad' ? '<button class="chip" id="bReroll">🎲 다시 뽑기</button>' : '');
+  const list = cgroup === 'ref' ? REF_BG : cands;
+  $('#clist').innerHTML = list.map(c => { const k = col(c); return '<button class="cand' + (S.bg === c ? ' on' : '') + '" data-c="' + c + '">' + compHTML(Object.assign({}, S, { bg: c })) + '<span class="t">' + esc(k.n) + '<small>' + esc(k.r) + '</small></span></button>'; }).join('');
+}
+$('#cgroups').addEventListener('click', e => {
+  if (e.target.closest('#bReroll')) { rollCands(); renderCands(); return; }
+  const b = e.target.closest('[data-g]'); if (!b) return; cgroup = b.dataset.g; if (cgroup === 'trad' && !cands.length) rollCands(); renderCands();
+});
+$('#clist').addEventListener('click', e => { const b = e.target.closest('.cand'); if (!b) return; push(); S.bg = b.dataset.c; refreshAll(); });
+
+/* ---------- favourites ---------- */
+function renderFavs() {
+  $('#flist').innerHTML = favs.length ? favs.map((f, i) => '<div class="cand" data-f="' + i + '" role="button" tabindex="0">' + compHTML(f) + '<span class="t">' + esc(col(f.bg).n) + '<small>' + f.blocks.map(b => esc(col(b).n)).join(' · ') + '</small></span><button class="del" data-del="' + i + '" aria-label="삭제">✕</button></div>').join('')
+    : '<p class="empty">마음에 드는 조합에서 ‘☆ 지금 조합 저장’을 누르면 여기에 모여요. 이 브라우저에 저장됩니다.</p>';
+}
+$('#bFav').onclick = () => { favs.unshift(JSON.parse(snap())); store.set('haishoku.favs.v1', favs); renderFavs(); toast('★ 저장했어요'); };
+$('#flist').addEventListener('click', e => {
+  const del = e.target.closest('[data-del]');
+  if (del) { favs.splice(+del.dataset.del, 1); store.set('haishoku.favs.v1', favs); renderFavs(); return; }
+  const f = e.target.closest('[data-f]'); if (!f) return; push(); Object.assign(S, { ext: 'none' }, clone(favs[+f.dataset.f])); refreshAll();
+});
+
+/* ---------- layout / output ---------- */
+function renderOpts() {
+  $('#dirs').innerHTML = [['row', '가로로 나란히'], ['col', '세로로 쌓기']].map(([v, l]) => '<button class="chip" data-v="' + v + '" aria-pressed="' + (S.dir === v) + '">' + l + '</button>').join('');
+  $('#bgtex').innerHTML = [[false, '없음 (단색)'], [true, '있음']].map(([v, l]) => '<button class="chip" data-v="' + v + '" aria-pressed="' + (S.bgTex === v) + '">' + l + '</button>').join('');
+  $('#ratios').innerHTML = RATIOS.map(([k, l]) => { const [w, h] = dimsFor(k, S.res); return '<button class="chip" data-v="' + k + '" aria-pressed="' + (S.ratio === k) + '">' + l + '</button>'; }).join('');
+  $('#exts').innerHTML = EXTS.map(([k, l]) => '<button class="chip" data-v="' + k + '" aria-pressed="' + ((S.ext || 'none') === k) + '">' + l + '</button>').join('');
+  $('#reses').innerHTML = [2400, 3600].map(v => { const [w, h] = outDims(S, v); return '<button class="chip" data-v="' + v + '" aria-pressed="' + (S.res === v) + '">' + w + '×' + h + '</button>'; }).join('');
+  $('#margin').value = S.margin; $('#marginV').textContent = S.margin + '%';
+  $('#gap').value = S.gap; $('#gapV').textContent = S.gap + '%';
+  $('#tex').value = S.tex; $('#texV').textContent = S.tex + '%';
+}
+function chipGroup(id, fn) { $(id).addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) fn(b.dataset.v); }); }
+chipGroup('#dirs', v => { push(); S.dir = v; renderOpts(); draw(); });
+chipGroup('#bgtex', v => { push(); S.bgTex = v === 'true'; renderOpts(); draw(); });
+chipGroup('#ratios', v => { push(); S.ratio = v; renderOpts(); draw(); });
+chipGroup('#reses', v => { S.res = +v; renderOpts(); });
+chipGroup('#exts', v => { push(); S.ext = v; renderOpts(); renderCands(); renderFavs(); draw(); });
+function slider(id, key, labelId) {
+  let dragging = false;
+  $(id).addEventListener('input', e => { if (!dragging) { push(); dragging = true; } S[key] = +e.target.value; $(labelId).textContent = S[key] + '%'; draw(); });
+  $(id).addEventListener('change', () => { dragging = false; renderCands(); renderFavs(); });
+}
+slider('#margin', 'margin', '#marginV'); slider('#gap', 'gap', '#gapV'); slider('#tex', 'tex', '#texV');
+$('#bSeed').onclick = () => { S.seed = (Math.random() * 1e9) | 0; draw(); };
+$('#bReset').onclick = () => { push(); Object.assign(S, clone(REF_LAYOUT)); refreshAll(); toast('레퍼런스 배치·질감으로 되돌렸어요'); };
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
+  ['edit', 'cand', 'fav', 'opt'].forEach(t => { $('#t-' + t).hidden = t !== b.dataset.tab; });
+}));
+
+/* ---------- picker (live preview) ---------- */
+let pickT = 'bg', pickOrig = null, pickPushed = false, pview = 'swatch';
+function openPicker(t) {
+  pickT = t; pickOrig = getT(t); pickPushed = false; $('#q').value = '';
+  $('#custom').value = col(pickOrig).h; $('#picker').hidden = false;
+  renderPickerBody();
+  requestAnimationFrame(() => { const on = document.querySelector('#pscroll .on'); if (on) on.scrollIntoView({ block: 'center' }); });
+}
+function closePicker() {
+  if ($('#picker').hidden) return;
+  $('#picker').hidden = true;
+  const id = getT(pickT);
+  if (id !== pickOrig) { recent = [id].concat(recent.filter(x => x !== id)).slice(0, 16); store.set('haishoku.recent.v1', recent); }
+  refreshAll();
+}
+function renderPickerHead() {
+  const cur = col(getT(pickT));
+  const fam = (FAMSEC.find(f => f[0] === cur.f) || [0, '직접 지정'])[1];
+  const label = pickT === 'bg' ? '배경' : '색면 ' + (pickT + 1);
+  $('#pcur').innerHTML = compHTML(S, 'mini') + '<span><span class="dot" style="background:' + cur.h + '"></span><b>' + esc(cur.n) + '</b> <em>' + esc(cur.r) + '</em><br><small>' + label + ' · ' + cur.h.toUpperCase() + ' · ' + fam + '</small></span>';
+  $('#prevert').hidden = getT(pickT) === pickOrig;
+  const near = LIST.filter(c => c.id !== cur.id).map(c => [cdist(c.h, cur.h), c]).sort((a, b) => a[0] - b[0]).slice(0, 10).map(x => x[1]);
+  $('#near').innerHTML = '<span class="nlabel">비슷한 색</span>' + near.map(c => '<button class="nr" data-id="' + c.id + '"><i style="background:' + c.h + '"></i>' + esc(c.n) + '</button>').join('');
+  document.querySelectorAll('#pscroll [data-id]').forEach(b => b.classList.toggle('on', b.dataset.id === cur.id));
+}
+function tile(c) {
+  return pview === 'name'
+    ? '<button class="nt" data-id="' + c.id + '"><i style="background:' + c.h + '"></i><span><b>' + esc(c.n) + '</b><small>' + esc(c.r) + '</small></span></button>'
+    : '<button class="sq" data-id="' + c.id + '" style="background:' + c.h + '" title="' + esc(c.n) + ' ' + c.h + '" aria-label="' + esc(c.n) + '"></button>';
+}
+function section(key, label, dot, list) {
+  return '<section class="sec" data-sec="' + key + '"><h4>' + (dot ? '<i style="background:' + dot + '"></i>' : '') + label + ' <span>' + list.length + '</span></h4><div class="' + (pview === 'name' ? 'named' : 'sgrid') + '">' + list.map(tile).join('') + '</div></section>';
+}
+function renderPickerBody() {
+  const q = $('#q').value.trim().toLowerCase().replace(/^#/, '');
+  let html = '', chips = '';
+  if (q) {
+    const list = SORTED.filter(c => c.n.includes(q) || c.r.includes(q) || c.id.includes(q) || c.h.slice(1).includes(q));
+    html = list.length ? section('q', '검색 결과', '', list) : '<p class="empty">‘' + esc(q) + '’에 맞는 색이 없어요</p>';
+  } else {
+    const rec = recent.map(col);
+    if (rec.length) { html += section('recent', '최근', '', rec); chips += '<button class="chip" data-jump="recent">최근</button>'; }
+    const refList = (pickT === 'bg' ? REF_BG : REF_BLOCKS).map(col);
+    html += section('ref', '레퍼런스', '', refList); chips += '<button class="chip" data-jump="ref">레퍼런스</button>';
+    FAMSEC.forEach(([k, l, dot]) => { html += section(k, l, dot, SORTED.filter(c => c.f === k)); chips += '<button class="chip" data-jump="' + k + '"><i style="background:' + dot + '"></i>' + l + '</button>'; });
+  }
+  chips += '<button class="chip" id="pview" aria-pressed="' + (pview === 'name') + '">' + (pview === 'name' ? '▦ 색만 보기' : '☰ 이름 보기') + '</button>';
+  $('#fams').innerHTML = chips; $('#pscroll').innerHTML = html;
+  renderPickerHead(); markJump();
+}
+function applyPick(id) { if (!pickPushed) { push(); pickPushed = true; } setT(pickT, id); renderPickerHead(); draw(); }
+function markJump() {
+  const sc = $('#pscroll'); let active = null;
+  sc.querySelectorAll('.sec').forEach(sec => { if (sec.offsetTop <= sc.scrollTop + 12) active = sec.dataset.sec; });
+  document.querySelectorAll('#fams [data-jump]').forEach(b => b.setAttribute('aria-pressed', b.dataset.jump === active));
+}
+$('#pscroll').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (b) applyPick(b.dataset.id); });
+$('#near').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (b) applyPick(b.dataset.id); });
+$('#pscroll').addEventListener('scroll', markJump, { passive: true });
+$('#fams').addEventListener('click', e => {
+  if (e.target.closest('#pview')) { pview = pview === 'name' ? 'swatch' : 'name'; renderPickerBody(); const on = document.querySelector('#pscroll .on'); if (on) on.scrollIntoView({ block: 'center' }); return; }
+  const b = e.target.closest('[data-jump]'); if (!b) return;
+  const sec = document.querySelector('#pscroll [data-sec="' + b.dataset.jump + '"]');
+  if (sec) $('#pscroll').scrollTo({ top: sec.offsetTop, behavior: 'smooth' });
+});
+$('#q').addEventListener('input', () => { renderPickerBody(); $('#pscroll').scrollTop = 0; });
+$('#custom').addEventListener('input', e => applyPick(e.target.value.toLowerCase()));
+$('#pdone').onclick = closePicker;
+$('#prevert').onclick = () => applyPick(pickOrig);
+$('#picker .sheet-bg').addEventListener('click', closePicker);
+$('#imgview').querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => { $('#imgview').hidden = true; }));
+
+/* ---------- export ---------- */
+let downloads = null;
+(async () => { try { if (window.claude && typeof window.claude.use === 'function') downloads = await window.claude.use('downloads'); } catch (e) { downloads = null; } })();
+const coarse = !!(window.matchMedia && matchMedia('(pointer:coarse)').matches);
+let saveBlob = null, saveName = '', outURL = '';
+async function exportPNG() {
+  const btn = $('#bSave'); if (btn.getAttribute('aria-busy') === 'true') return;
+  btn.setAttribute('aria-busy', 'true'); const label = btn.textContent; btn.textContent = '만드는 중…';
+  await new Promise(r => setTimeout(r, 40));
+  try {
+    const c = document.createElement('canvas'); paint(c, S.res); texCache.clear();
+    const name = ('配色_' + col(S.bg).n + '_' + S.blocks.map(b => col(b).n).join('-')).replace(/[#\\/:*?"<>|]/g, '').slice(0, 120) + '.png';
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    if (downloads) {
+      try { await downloads.save({ filename: name, data: blob }); toast('저장했어요'); }
+      catch (err) { const code = err && err.code; if (code === 'declined') toast('저장을 취소했어요'); else if (code === 'rate_limited') toast('잠시 후 다시 눌러 주세요'); else openSave(blob, name, false, c); }
+    } else if (coarse) openSave(blob, name, true, c);
+    else fileDownload(blob, name);
+  } finally { btn.textContent = label; btn.removeAttribute('aria-busy'); draw(); }
+}
+function fileDownload(blob, name) {
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 20000);
+  toast(coarse ? '‘파일’ 앱의 다운로드 폴더에 저장돼요' : '다운로드를 시작했어요');
+}
+function openSave(blob, name, withButtons, canvas) {
+  saveBlob = blob; saveName = name;
+  if (outURL) { URL.revokeObjectURL(outURL); outURL = ''; }
+  if (withButtons) { outURL = URL.createObjectURL(blob); $('#outimg').src = outURL; } else $('#outimg').src = canvas.toDataURL('image/png');
+  let canShare = false;
+  try { canShare = withButtons && !!navigator.canShare && navigator.canShare({ files: [new File([blob], name, { type: 'image/png' })] }); } catch (e) { canShare = false; }
+  $('#bShare').hidden = !canShare; $('#bFile').hidden = !withButtons;
+  $('#imgview').hidden = false;
+}
+$('#bShare').onclick = async () => { try { await navigator.share({ files: [new File([saveBlob], saveName, { type: 'image/png' })] }); } catch (e) { if (!e || e.name !== 'AbortError') toast('공유 창을 열 수 없어요 · 이미지를 길게 눌러 저장하세요'); } };
+$('#bFile').onclick = () => fileDownload(saveBlob, saveName);
+$('#bSave').onclick = exportPNG;
+
+/* ---------- misc ---------- */
+let tt = 0;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 1800); }
+window.addEventListener('keydown', e => {
+  const a = document.activeElement, typing = a && /INPUT|TEXTAREA/.test(a.tagName) && a.type !== 'range';
+  if (e.key === 'Escape') { closePicker(); $('#imgview').hidden = true; return; }
+  if (typing) return;
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+  if (e.code === 'Space' && $('#picker').hidden) { e.preventDefault(); randBg(); }
+});
+function refreshAll() { renderRows(); renderOpts(); renderCands(); renderFavs(); draw(); }
+$('#ncount').textContent = LIST.length;
+refreshAll();
+</script>
+</body>
+</html>
